@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="93474f44-c101-4bc9-aacf-abc90bb08061" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="02a8ba05-403f-4db8-ba72-bcea464bf789" >
+		<salesforce:basic-connection username="harika@enquero.com" password="Sreesanvi@16" securityToken="wqhop86WM6vFVWMgYvwqNiM3k" />
+	</salesforce:sfdc-config>
+	<flow name="salesforce_queryFlow" doc:id="7d4b4d4a-623a-42ae-992c-a1cb9ba5a3ae" >
+		<http:listener doc:name="Listener" doc:id="f60c2e77-8d40-4827-8d1d-20407c8b7d23" config-ref="HTTP_Listener_config" path="/query"/>
+		<set-variable value="#[attributes.queryParams.Name]" doc:name="Set Variable" doc:id="bdf0de94-52e6-4bf9-a946-4c6148316405" variableName="Name"/> 
+		<salesforce:query doc:name="Query" doc:id="ca136698-5a3e-49fb-b158-5fb924047004" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query><![CDATA[select Name,BillingCountry,BillingCity from Account where Name=':Name']]></salesforce:salesforce-query>
+			<salesforce:parameters ><![CDATA[#[output application/json
+---
+{
+	"Name" : vars.Name
+}]]]></salesforce:parameters>
+		</salesforce:query>
+		<ee:transform doc:name="Transform Message" doc:id="ac0ac1e4-6c5e-4012-a507-40568c07b107" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
